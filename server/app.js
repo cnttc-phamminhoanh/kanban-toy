@@ -10,6 +10,8 @@ var DashboardRouter = require('./src/routes/dashboard')
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const HOST = process.env.HOST || "127.0.0.1";
+
 // Middleware
 app.use(cors({
     origin: ["http://172.18.1.12:8082"],
@@ -37,8 +39,8 @@ async function startServer() {
 
         console.log("✅ SQL Server connected successfully");
 
-        app.listen(PORT, () => {
-            console.log(`🚀 Server running at http://localhost:${PORT}`);
+        app.listen(PORT, HOST, () => {
+            console.log(`🚀 Server running at http://${HOST}:${PORT}`);
         });
 
     } catch (error) {
