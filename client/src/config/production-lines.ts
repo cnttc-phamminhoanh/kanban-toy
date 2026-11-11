@@ -4,8 +4,8 @@ export const PRODUCTION_LINES: ProductionLine[] = [
   {
     id: 'a307a6b1-c76a-460f-a813-7ae5abbc2b2a',
     code: 'F11-FINISHING',
-    name: 'F11 FINISHING',
-    subtitle: 'Finishing Line',
+    name: 'F11 FINSHING',
+    subtitle: 'Finshing Line',
     accent: 'blue',
     targetLabel: 'Kiểm hàng',
   },
