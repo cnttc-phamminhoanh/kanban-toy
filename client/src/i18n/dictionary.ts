@@ -54,7 +54,7 @@ const en: Record<TranslationKey, string> = {
   colGroup: 'Group',
   colPlannedWorkers: 'Planned heads',
   colActualWorkers: 'Actual heads',
-  colItemCode: 'Item code',
+  colItemCode: 'Style',
   colWoCode: 'WO no.',
   colPoCode: 'PO no.',
   colPoQty: 'PO qty',
