@@ -70,33 +70,33 @@ const buildColumns = (
     },
     ...(showItemCode
       ? [
-          {
-            key: 'itemCode',
-            label: t('colItemCode'),
-            align: 'center' as const,
-            render: (row: ProductionRecordRow) => row.itemCode || EMPTY,
-          },
-        ]
+        {
+          key: 'itemCode',
+          label: t('colItemCode'),
+          align: 'center' as const,
+          render: (row: ProductionRecordRow) => row.itemCode || EMPTY,
+        },
+      ]
       : []),
     ...(showWoCode
       ? [
-          {
-            key: 'woCode',
-            label: t('colWoCode'),
-            align: 'center' as const,
-            render: (row: ProductionRecordRow) => row.woCode ?? EMPTY,
-          },
-        ]
+        {
+          key: 'woCode',
+          label: t('colWoCode'),
+          align: 'center' as const,
+          render: (row: ProductionRecordRow) => row.woCode ?? EMPTY,
+        },
+      ]
       : []),
     ...(showPoCode
       ? [
-          {
-            key: 'poCode',
-            label: t('colPoCode'),
-            align: 'center' as const,
-            render: (row: ProductionRecordRow) => row.poCode || EMPTY,
-          },
-        ]
+        {
+          key: 'poCode',
+          label: t('colPoCode'),
+          align: 'center' as const,
+          render: (row: ProductionRecordRow) => row.poCode || EMPTY,
+        },
+      ]
       : []),
     {
       key: 'poQty',
@@ -173,7 +173,7 @@ const buildColumns = (
 };
 
 const tintClass = (row: ProductionRecordRow): string =>
-  row.actualQty > 0 && row.actualQty < row.plannedQty ? 'bg-status-danger/10' : '';
+  row.actualQty === 0 || (row.actualQty > 0 && row.actualQty < row.plannedQty) ? 'bg-status-danger/10' : '';
 
 const toneClass: Record<Tone, string> = {
   ok: 'text-status-ok',
@@ -193,19 +193,19 @@ const ProductionTable = ({
 
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-white shadow-sm">
-      <div className="board-scroll overflow-x-auto">
-        <table className="w-full min-w-[1360px] border-collapse">
-          <thead>
+      <div>
+        <table className="w-full table-fixed border-collapse max-lg:block">
+          <thead className="max-lg:hidden">
             <tr className="board-table-head">
               {columns.map((column: ColumnDef) => (
                 <th
                   key={column.key}
                   scope="col"
                   className={cn(
-                    'px-2 py-2.5 text-[12px] font-bold leading-snug text-white',
+                    'px-2 py-2.5 text-[12px] font-bold leading-snug text-white [overflow-wrap:anywhere]',
                     column.align === 'left'
-                      ? 'whitespace-nowrap text-left'
-                      : 'whitespace-normal text-center',
+                      ? 'text-left'
+                      : 'text-center',
                   )}
                 >
                   {column.label}
@@ -213,12 +213,12 @@ const ProductionTable = ({
               ))}
             </tr>
           </thead>
-          <tbody>
+          <tbody className="max-lg:block">
             {rows.map((row: ProductionRecordRow, index: number) => (
               <tr
                 key={row.id}
                 className={cn(
-                  'border-b border-border/50 transition-colors last:border-b-0 hover:bg-primary/[0.06]',
+                  'border-b border-border/50 transition-colors last:border-b-0 hover:bg-primary/[0.06] max-lg:grid max-lg:grid-cols-2',
                   index % 2 === 1 ? 'bg-board-head-from/[0.12]' : 'bg-white',
                 )}
               >
@@ -226,21 +226,29 @@ const ProductionTable = ({
                   <td
                     key={column.key}
                     className={cn(
-                      'px-2 py-2.5 text-[12.5px]',
+                      'px-2 py-2.5 text-[12.5px] align-top whitespace-normal [overflow-wrap:anywhere] max-lg:flex max-lg:min-w-0 max-lg:flex-col max-lg:gap-1 max-lg:border-b max-lg:border-border/50 max-lg:text-left',
                       column.wrap
-                        ? 'max-w-[240px] whitespace-normal break-words text-[12px] leading-snug'
-                        : 'whitespace-nowrap',
-                      column.align === 'left' || column.bodyLeft ? 'text-left' : 'text-center',
+                        ? 'text-[12px] leading-snug'
+                        : '',
+                      column.align === 'left' || column.bodyLeft ? 'lg:text-left' : 'lg:text-center',
                       column.tinted
                         ? cn('font-bold tnum', tintClass(row))
                         : 'font-medium text-foreground tnum',
-                      column.tone && row.actualQty !== 0
-                        ? toneClass[column.tone(row)]
-                        : '',
+                      column.tone && row.actualQty === 0
+                        ? toneClass.danger
+                        : column.tone && row.actualQty !== 0
+                          ? toneClass[column.tone(row)]
+                          : '',
                       column.key === 'groupName' ? 'font-bold' : '',
+                      column.key === 'groupName' || column.key === 'goodsName'
+                        ? 'max-lg:col-span-2'
+                        : '',
                     )}
                   >
-                    {column.render(row)}
+                    <span className="text-[11px] font-semibold text-muted-foreground lg:hidden">
+                      {column.label}
+                    </span>
+                    <span>{column.render(row)}</span>
                   </td>
                 ))}
               </tr>

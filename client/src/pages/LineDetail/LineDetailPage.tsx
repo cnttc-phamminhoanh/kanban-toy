@@ -1,4 +1,4 @@
-import { CalendarDays, Clock, MoveHorizontal } from 'lucide-react';
+import { CalendarDays, Clock } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
@@ -7,12 +7,7 @@ import type { ProductionRecordRow } from '@shared/api.interface';
 import { getApiErrorMessage } from '@client/src/lib/api-error';
 import { useProductionLineDetail } from '@client/src/hooks/use-production';
 import { useNow } from '@client/src/hooks/use-now';
-import { useRotatingIndex } from '@client/src/hooks/use-rotating-index';
 import { useRowPagination } from '@client/src/hooks/use-row-pagination';
-import {
-  getLineRotationIntervalMs,
-  isRotatingLine,
-} from '@client/src/config/line-rotation';
 import { Button } from '@client/src/components/ui/button';
 import { Skeleton } from '@client/src/components/ui/skeleton';
 import BoardBottomBar from '@client/src/components/board/BoardBottomBar';
@@ -41,38 +36,21 @@ const LineDetailPage = () => {
   const { data, isLoading, isError, error, refetch } = useProductionLineDetail(lineCode);
 
   const rows = data?.rows ?? [];
-  const groups = useMemo(() => {
-    const seen: string[] = [];
-    rows.forEach((row) => {
-      if (!seen.includes(row.groupName)) seen.push(row.groupName);
-    });
-    return seen;
-  }, [rows]);
-
-  const activeLineCode = data?.line.code ?? lineCode;
-  const rotationEnabled = isRotatingLine(activeLineCode) && groups.length > 1;
-  const activeGroupIndex = useRotatingIndex(
-    groups.length,
-    getLineRotationIntervalMs(activeLineCode),
-    rotationEnabled,
+  const visibleRows = useMemo(
+    () =>
+      [...rows].sort(
+        (a: ProductionRecordRow, b: ProductionRecordRow) =>
+          rowPriority(a) - rowPriority(b),
+      ),
+    [rows],
   );
-  const activeGroup = groups[activeGroupIndex] ?? null;
-  const visibleRows = useMemo(() => {
-    const base = rotationEnabled
-      ? rows.filter((row) => row.groupName === activeGroup)
-      : rows;
-    return [...base].sort(
-      (a: ProductionRecordRow, b: ProductionRecordRow) =>
-        rowPriority(a) - rowPriority(b),
-    );
-  }, [rows, rotationEnabled, activeGroup]);
 
   const resetKey = useMemo(
     () =>
-      `${lineCode}|${activeGroup ?? 'all'}|${lang}|${visibleRows
+      `${lineCode}|${lang}|${visibleRows
         .map((row: ProductionRecordRow) => row.id)
         .join(',')}`,
-    [lineCode, activeGroup, lang, visibleRows],
+    [lineCode, lang, visibleRows],
   );
   const { pages, pageCount, measuring } = useRowPagination(
     tableRef,
@@ -89,7 +67,7 @@ const LineDetailPage = () => {
 
   useEffect(() => {
     setPage(1);
-  }, [activeGroup, lineCode, lang]);
+  }, [lineCode, lang]);
 
   useEffect(() => {
     if (pageCount <= 1) return undefined;
@@ -107,13 +85,6 @@ const LineDetailPage = () => {
   const showWoCode = isInjmolding;
   const showItemCode = !isInjmolding;
   const showPoCode = !isInjmolding;
-  const columnCount =
-    13 +
-    (showGoodsName ? 1 : 0) +
-    (showWoCode ? 1 : 0) -
-    (showItemCode ? 0 : 1) -
-    (showPoCode ? 0 : 1);
-
   return (
     <div className="flex h-screen flex-col overflow-hidden">
       <main className="mx-auto flex min-h-0 w-full max-w-[1720px] flex-1 flex-col px-4 pt-5 md:px-8 md:pt-7">
@@ -188,11 +159,7 @@ const LineDetailPage = () => {
           ) : null}
 
           {!isLoading && !isError && hasRows && data ? (
-            <div className="rise" key={activeGroup ?? 'all'}>
-              <p className="mb-2 flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground md:hidden">
-                <MoveHorizontal className="size-3.5" aria-hidden />
-                {t('swipeHint', { count: columnCount })}
-              </p>
+            <div className="rise">
               <ProductionTable
                 rows={tableRows}
                 showGoodsName={showGoodsName}
