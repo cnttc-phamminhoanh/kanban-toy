@@ -28,14 +28,14 @@ class InjmoldingRepository {
                                 e.dept, e.short_code, e.pro_no,e.pro_date
                             ORDER BY e.id DESC, m.id DESC
                         ) AS rn
-                    FROM RDS.erp_t8_GI.dbo.sfc_pro_emp_num_def01 e
+                    FROM RDS_APP.erp_t8_GI.dbo.sfc_pro_emp_num_def01 e
                     LEFT JOIN [TongeBi].[dbo].[kanban_wo_smv] k
                         ON k.wrk_order = e.short_code
                     AND k.step = '21'
                     AND k.process = 'INJMOLDING'
-                    LEFT JOIN RDS.erp_t8_GI.dbo.sfc_mo2 m
+                    LEFT JOIN RDS_APP.erp_t8_GI.dbo.sfc_mo2 m
                         ON m.def02=left(k.wrk_order, CHARINDEX('#', k.wrk_order + '#') - 1)
-                    LEFT JOIN RDS.erp_t8_GI.dbo.bas_goods b
+                    LEFT JOIN RDS_APP.erp_t8_GI.dbo.bas_goods b
                         ON b.goods_no = m.goods_no
                     WHERE e.dept LIKE @flow
                     AND e.pro_no = '21'

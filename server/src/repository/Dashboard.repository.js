@@ -21,7 +21,7 @@ class DashboardRepository {
                         e.ord_no as OrderNo, 
                         '' as WrkOrder, 
                         isnull(s.smv, 0) as SMV
-                    FROM RDS.erp_t8_GI.dbo.sfc_pro_emp_num_def01 e 
+                    FROM RDS_APP.erp_t8_GI.dbo.sfc_pro_emp_num_def01 e 
                     left join [TongeBi].[dbo].[kanban_smv] s on e.short_code =  s.style and e.ord_no = s.ord_no and s.step = e.pro_no
                     where 
                     dept = @flow 

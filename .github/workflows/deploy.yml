@@ -12,21 +12,23 @@ jobs:
     steps:
       - name: Pull code
         run: |
-          cd /home/it/kanban_toys
-          git pull --ff-only "https://x-access-token:${GITHUB_TOKEN}@github.com/cnttc-phamminhoanh/stock_analysis.git" master
+          cd /home/it/kanban-toy
+          git pull --ff-only "https://x-access-token:${GITHUB_TOKEN}@github.com/cnttc-phamminhoanh/kanban-toy.git" master
+          git reset --hard FETCH_HEAD
+          git status --short
 
       - name: Install package
         run: |
-          cd /home/it/kanban_toys/server
-          npm install
+          cd /home/it/kanban-toy/server
+          npm ci --no-audit --no-fund
 
       - name: Install and bundle UI
         run: |
-          cd /home/it/kanban_toys/client
-          npm install
+          cd /home/it/kanban-toy/client
+          npm ci --no-audit --no-fund
           npm run build
 
       - name: Restart server
         run: |
-          cd /home/it/kanban_toys/server_BI
-          pm2 restart stock-api || pm2 start app.js --name stock-api
+          cd /home/it/kanban-toy/server
+          pm2 restart kanban-toy-api || pm2 start app.js --name kanban-toy-api
