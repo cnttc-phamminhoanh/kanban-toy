@@ -14,7 +14,7 @@ const HOST = process.env.HOST || "127.0.0.1";
 
 // Middleware
 app.use(cors({
-    origin: ["http://172.18.1.12:8082"],
+    origin: ["http://172.18.1.12:8082", "http://localhost:8082"],
     credentials: true,
 }));
 app.use(logger("dev"));
