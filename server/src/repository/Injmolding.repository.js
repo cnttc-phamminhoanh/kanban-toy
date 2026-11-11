@@ -64,7 +64,7 @@ class InjmoldingRepository {
                 FROM payroll.pytckreg r
                 inner join payroll.pywrkord o on o.Wrkorder = r.WrkOrder
                 WHERE RegDate = curdate()
-                AND flow like left(?,19)
+                AND flow like ?
                 AND StepNo in ('21')
                 GROUP by flow, StepNo, o.WrkOrder, o.OrderNo
                `, [flow]);

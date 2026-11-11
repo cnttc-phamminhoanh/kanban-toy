@@ -49,7 +49,7 @@ class AssemblyRepository {
                 FROM payroll.pytckreg r
                 inner join payroll.pywrkord o on o.Wrkorder = r.WrkOrder
                 WHERE RegDate = curdate()
-                AND flow like left(?,9)
+                AND flow like ?
                 AND StepNo in ('123')
                 GROUP by flow, StepNo, o.Style, o.OrderNo 
                 union 
@@ -62,7 +62,7 @@ class AssemblyRepository {
                 FROM payroll.pytckreg r
                 inner join payroll.pywrkord o on o.Wrkorder = r.WrkOrder
                 WHERE RegDate = curdate()
-                AND flow like left(?,9)
+                AND flow like ?
                 AND StepNo in ('810')
                 GROUP by flow, StepNo, o.Style, o.OrderNo;
                `, [flow, flow]);

@@ -23,11 +23,11 @@ function mapDashboardData(sqlRows, mysqlRows, groupBy = "PO") {
                 );
             }
 
-            return JSON.stringify([stepNo, wo]);
+            return JSON.stringify([flow, stepNo, wo]);
         }
 
         return JSON.stringify([
-            // flow,
+            flow,
             stepNo,
             normalize(row.MH ?? row.Style),
             normalize(row.PO ?? row.OrderNo)
