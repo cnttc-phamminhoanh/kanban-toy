@@ -48,7 +48,7 @@ class DashboardRepository {
                 FROM payroll.pytckreg r
                 inner join payroll.pywrkord o on o.Wrkorder = r.WrkOrder
                 WHERE RegDate = curdate()
-                AND flow = ?
+                AND flow like ?
                 and right(Flow, 3) = 'OPA'
                 AND StepNo in ('979')
                 GROUP by flow, StepNo, o.Style, o.OrderNo 
@@ -62,7 +62,7 @@ class DashboardRepository {
                 FROM payroll.pytckreg r
                 inner join payroll.pywrkord o on o.Wrkorder = r.WrkOrder
                 WHERE RegDate = curdate()
-                AND flow = ?
+                AND flow like ?
                 and right(Flow, 3) <> 'OPA'
                 AND StepNo in ('798')
                 GROUP by flow, StepNo, o.Style, o.OrderNo;
