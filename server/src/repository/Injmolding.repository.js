@@ -38,6 +38,7 @@ class InjmoldingRepository {
                     LEFT JOIN RDS_APP.erp_t8_GI.dbo.bas_goods b
                         ON b.goods_no = m.goods_no
                     WHERE e.dept LIKE @flow
+                    AND e.sheet_sta = 1
                     AND e.pro_no = '21'
                     AND cast(e.pro_date as date) >= CAST(GETDATE() AS DATE)
                 ) x

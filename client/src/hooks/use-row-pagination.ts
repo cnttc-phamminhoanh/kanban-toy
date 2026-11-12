@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type RefObject } from 'react';
 
 const BOTTOM_GAP_PX = 6;
 const HEADER_FALLBACK_PX = 46;
+const MAX_ROWS_PER_PAGE = 12;
 
 export interface RowPaginationState {
   pages: number[][];
@@ -18,7 +19,7 @@ const splitByHeight = (
   let used = 0;
 
   rowHeights.forEach((height: number, index: number) => {
-    if (current.length > 0 && used + height > availableHeight) {
+    if (current.length > 0 && (current.length >= MAX_ROWS_PER_PAGE || used + height > availableHeight)) {
       pages.push(current);
       current = [];
       used = 0;
