@@ -34,7 +34,8 @@ class InjmoldingRepository {
                     AND k.step = '21'
                     AND k.process = 'INJMOLDING'
                     LEFT JOIN RDS_APP.erp_t8_GI.dbo.sfc_mo2 m
-                        ON m.def02=left(k.wrk_order, CHARINDEX('#', k.wrk_order + '#') - 1)
+                        ON m.def16 = e.short_code
+                        -- ON m.def02=left(k.wrk_order, CHARINDEX('#', k.wrk_order + '#') - 1)
                     LEFT JOIN RDS_APP.erp_t8_GI.dbo.bas_goods b
                         ON b.goods_no = m.goods_no
                     WHERE e.dept LIKE @flow
