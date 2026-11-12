@@ -22,7 +22,7 @@ class InjmoldingRepository {
                         e.emp_num AS SLNKH, e.fact_emp_num AS SLNTT,
                         e.ord_qty AS SLPO, e.pro_no AS CDoan, e.plan_qty AS SLKH,
                         m.goods_no AS GoodsNo, b.goods_name AS GoodsName,
-                        ROUND(k.smv, 2) AS SMV,
+                        ROUND(isnull (k.smv,0), 2) AS SMV,
                         ROW_NUMBER() OVER (
                             PARTITION BY
                                 e.dept, e.short_code, e.pro_no,e.pro_date
@@ -34,10 +34,12 @@ class InjmoldingRepository {
                     AND k.step = '21'
                     AND k.process = 'INJMOLDING'
                     LEFT JOIN RDS_APP.erp_t8_GI.dbo.sfc_mo2 m
-                        ON m.def02=left(k.wrk_order, CHARINDEX('#', k.wrk_order + '#') - 1)
+                        ON m.def16 = e.short_code
+                        -- ON m.def02=left(k.wrk_order, CHARINDEX('#', k.wrk_order + '#') - 1)
                     LEFT JOIN RDS_APP.erp_t8_GI.dbo.bas_goods b
                         ON b.goods_no = m.goods_no
                     WHERE e.dept LIKE @flow
+                    AND e.sheet_sta = 1
                     AND e.pro_no = '21'
                     AND cast(e.pro_date as date) >= CAST(GETDATE() AS DATE)
                 ) x

@@ -1,3 +1,5 @@
+import { useLayoutEffect, useRef, useState } from 'react';
+import type { PointerEvent } from 'react';
 import { cn } from '@client/src/lib/utils';
 import { useI18n } from '@client/src/i18n/I18nContext';
 import type { TranslationKey } from '@client/src/i18n/dictionary';
@@ -19,7 +21,6 @@ interface ColumnDef {
   align: 'left' | 'center';
   bodyLeft?: boolean;
   tinted?: boolean;
-  wrap?: boolean;
   render: (row: ProductionRecordRow) => string;
   tone?: (row: ProductionRecordRow) => Tone;
 }
@@ -53,50 +54,45 @@ const buildColumns = (
     {
       key: 'groupName',
       label: t('colGroup'),
-      align: 'left',
+      align: 'center',
       render: (row) => row.groupName || EMPTY,
     },
     {
-      key: 'plannedWorkers',
-      label: t('colPlannedWorkers'),
+      key: 'workers',
+      label: t('colWorkers'),
       align: 'center',
-      render: (row) => num(row.plannedWorkers),
-    },
-    {
-      key: 'actualWorkers',
-      label: t('colActualWorkers'),
-      align: 'center',
-      render: (row) => num(row.actualWorkers),
+      render: (row) =>
+        `${num(row.plannedWorkers)}/${num(row.actualWorkers)}`,
     },
     ...(showItemCode
       ? [
-          {
-            key: 'itemCode',
-            label: t('colItemCode'),
-            align: 'center' as const,
-            render: (row: ProductionRecordRow) => row.itemCode || EMPTY,
-          },
-        ]
+        {
+          key: 'itemCode',
+          label: t('colItemCode'),
+          align: 'center' as const,
+          render: (row: ProductionRecordRow) => row.itemCode || EMPTY,
+        },
+      ]
       : []),
     ...(showWoCode
       ? [
-          {
-            key: 'woCode',
-            label: t('colWoCode'),
-            align: 'center' as const,
-            render: (row: ProductionRecordRow) => row.woCode ?? EMPTY,
-          },
-        ]
+        {
+          key: 'woCode',
+          label: t('colWoCode'),
+          align: 'center' as const,
+          render: (row: ProductionRecordRow) => row.woCode ?? EMPTY,
+        },
+      ]
       : []),
     ...(showPoCode
       ? [
-          {
-            key: 'poCode',
-            label: t('colPoCode'),
-            align: 'center' as const,
-            render: (row: ProductionRecordRow) => row.poCode || EMPTY,
-          },
-        ]
+        {
+          key: 'poCode',
+          label: t('colPoCode'),
+          align: 'center' as const,
+          render: (row: ProductionRecordRow) => row.poCode || EMPTY,
+        },
+      ]
       : []),
     {
       key: 'poQty',
@@ -118,7 +114,6 @@ const buildColumns = (
       label: t('colGoodsName'),
       align: 'center',
       bodyLeft: true,
-      wrap: true,
       render: (row) => row.goodsName ?? EMPTY,
     });
   }
@@ -173,13 +168,32 @@ const buildColumns = (
 };
 
 const tintClass = (row: ProductionRecordRow): string =>
-  row.actualQty > 0 && row.actualQty < row.plannedQty ? 'bg-status-danger/10' : '';
+  row.actualQty === 0 || (row.actualQty > 0 && row.actualQty < row.plannedQty) ? 'bg-status-danger/10' : '';
 
 const toneClass: Record<Tone, string> = {
   ok: 'text-status-ok',
   danger: 'text-status-danger',
   muted: 'text-muted-foreground',
 };
+
+const DEFAULT_WIDTHS: Record<string, number> = {
+  groupName: 205,
+  workers: 135,
+  itemCode: 120,
+  woCode: 170,
+  goodsName: 180,
+  poCode: 95,
+  poQty: 65,
+  operationStaff: 95,
+  smv: 50,
+  plannedQty: 65,
+  actualQty: 65,
+  completionRate: 110,
+  varianceQty: 95,
+  varianceHours: 135,
+};
+
+const isResizable = (key: string) => key === 'woCode' || key === 'goodsName';
 
 const ProductionTable = ({
   rows,
@@ -190,11 +204,89 @@ const ProductionTable = ({
 }: ProductionTableProps) => {
   const { t } = useI18n();
   const columns = buildColumns(showGoodsName, showWoCode, showItemCode, showPoCode, t);
+  const [columnWidths, setColumnWidths] = useState<Record<string, number> | null>(null);
+  const tableRef = useRef<HTMLTableElement>(null);
+  const [groupWidth, setGroupWidth] = useState(220);
+  useLayoutEffect(() => {
+    const measure = () => {
+      const cell = tableRef.current?.querySelector('td');
+      if (!cell) return;
+      const context = document.createElement('canvas').getContext('2d');
+      if (!context) return;
+      const style = getComputedStyle(cell);
+      context.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+      const textWidth = Math.max(...rows.map((row) => context.measureText(row.groupName || EMPTY).width));
+      setGroupWidth(Math.ceil(textWidth + parseFloat(style.paddingLeft) + parseFloat(style.paddingRight) + 4));
+    };
+    measure();
+    let active = true;
+    void document.fonts.ready.then(() => { if (active) measure(); });
+    const observer = new ResizeObserver(measure);
+    const container = tableRef.current?.parentElement;
+    if (container) observer.observe(container);
+    return () => { active = false; observer.disconnect(); };
+  }, [rows]);
+  useLayoutEffect(() => {
+    const container = tableRef.current?.parentElement;
+    if (!container) return;
+    const observer = new ResizeObserver(() => setColumnWidths(null));
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
+  const resize = useRef<{
+    key: string;
+    startX: number;
+    startWidth: number;
+    widths: Record<string, number>;
+  } | null>(null);
+  const getWidth = (key: string) => DEFAULT_WIDTHS[key] ?? 150;
+  const totalWidth = columns.reduce((total, column) => total + getWidth(column.key), 0);
+
+  const startResize = (event: PointerEvent<HTMLSpanElement>, key: string) => {
+    event.preventDefault();
+    const headers = event.currentTarget.closest('table')!.querySelectorAll('th');
+    const widths: Record<string, number> = {};
+    columns.forEach((column, index) => {
+      widths[column.key] = headers[index].getBoundingClientRect().width;
+    });
+    resize.current = {
+      key, startX: event.clientX, startWidth: widths[key], widths,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const moveResize = (event: PointerEvent<HTMLSpanElement>) => {
+    const current = resize.current;
+    if (!current) return;
+    const width = Math.max(80, current.startWidth + event.clientX - current.startX);
+    setColumnWidths({ ...current.widths, [current.key]: width });
+  };
+
+  const stopResize = () => { resize.current = null; };
 
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-white shadow-sm">
-      <div className="board-scroll overflow-x-auto">
-        <table className="w-full min-w-[1360px] border-collapse">
+      <div className="overflow-x-auto">
+        <table
+          ref={tableRef}
+          className="production-table w-full table-fixed border-collapse"
+          style={columnWidths ? {
+            width: columns.reduce((total, column) => total + (
+              column.key === 'groupName' ? groupWidth : columnWidths[column.key] ?? getWidth(column.key)
+            ), 0),
+          } : undefined}
+        >
+          <colgroup>
+            {columns.map((column) => (
+              <col
+                key={column.key}
+                style={{ width: column.key === 'groupName'
+                  ? groupWidth
+                  : columnWidths?.[column.key]
+                    ?? `calc((100% - ${groupWidth}px) * ${getWidth(column.key) / (totalWidth - getWidth('groupName'))})` }}
+              />
+            ))}
+          </colgroup>
           <thead>
             <tr className="board-table-head">
               {columns.map((column: ColumnDef) => (
@@ -202,13 +294,23 @@ const ProductionTable = ({
                   key={column.key}
                   scope="col"
                   className={cn(
-                    'px-2 py-2.5 text-[12px] font-bold leading-snug text-white',
+                    'relative font-bold leading-snug text-white whitespace-normal',
                     column.align === 'left'
-                      ? 'whitespace-nowrap text-left'
-                      : 'whitespace-normal text-center',
+                      ? 'text-left'
+                      : 'text-center',
                   )}
                 >
-                  {column.label}
+                  <span className="block [overflow-wrap:anywhere]">{column.label}</span>
+                  {isResizable(column.key) && (
+                    <span
+                      onPointerDown={(event) => startResize(event, column.key)}
+                      onPointerMove={moveResize}
+                      onPointerUp={stopResize}
+                      onPointerCancel={stopResize}
+                      onLostPointerCapture={stopResize}
+                      className="absolute right-0 top-0 z-10 h-full w-2 touch-none cursor-col-resize select-none border-r-2 border-white/60 hover:bg-white/30"
+                    />
+                  )}
                 </th>
               ))}
             </tr>
@@ -226,21 +328,25 @@ const ProductionTable = ({
                   <td
                     key={column.key}
                     className={cn(
-                      'px-2 py-2.5 text-[12.5px]',
-                      column.wrap
-                        ? 'max-w-[240px] whitespace-normal break-words text-[12px] leading-snug'
-                        : 'whitespace-nowrap',
+                      'align-top whitespace-nowrap',
                       column.align === 'left' || column.bodyLeft ? 'text-left' : 'text-center',
                       column.tinted
                         ? cn('font-bold tnum', tintClass(row))
                         : 'font-medium text-foreground tnum',
-                      column.tone && row.actualQty !== 0
-                        ? toneClass[column.tone(row)]
-                        : '',
+                      column.tone && row.actualQty === 0
+                        ? toneClass.danger
+                        : column.tone && row.actualQty !== 0
+                          ? toneClass[column.tone(row)]
+                          : '',
                       column.key === 'groupName' ? 'font-bold' : '',
                     )}
                   >
-                    {column.render(row)}
+                    <span
+                      className={column.key === 'groupName' ? 'block whitespace-nowrap' : 'block truncate'}
+                      title={column.render(row)}
+                    >
+                      {column.render(row)}
+                    </span>
                   </td>
                 ))}
               </tr>

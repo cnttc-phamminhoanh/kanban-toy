@@ -1,5 +1,5 @@
-import { CalendarDays, Clock, MoveHorizontal } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { CalendarDays, Clock } from 'lucide-react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import type { ProductionRecordRow } from '@shared/api.interface';
@@ -7,12 +7,7 @@ import type { ProductionRecordRow } from '@shared/api.interface';
 import { getApiErrorMessage } from '@client/src/lib/api-error';
 import { useProductionLineDetail } from '@client/src/hooks/use-production';
 import { useNow } from '@client/src/hooks/use-now';
-import { useRotatingIndex } from '@client/src/hooks/use-rotating-index';
 import { useRowPagination } from '@client/src/hooks/use-row-pagination';
-import {
-  getLineRotationIntervalMs,
-  isRotatingLine,
-} from '@client/src/config/line-rotation';
 import { Button } from '@client/src/components/ui/button';
 import { Skeleton } from '@client/src/components/ui/skeleton';
 import BoardBottomBar from '@client/src/components/board/BoardBottomBar';
@@ -38,41 +33,26 @@ const LineDetailPage = () => {
   const { lang, t, targetLabelText } = useI18n();
   const [page, setPage] = useState(1);
   const tableRef = useRef<HTMLDivElement | null>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const titleTextRef = useRef<HTMLSpanElement>(null);
   const { data, isLoading, isError, error, refetch } = useProductionLineDetail(lineCode);
 
   const rows = data?.rows ?? [];
-  const groups = useMemo(() => {
-    const seen: string[] = [];
-    rows.forEach((row) => {
-      if (!seen.includes(row.groupName)) seen.push(row.groupName);
-    });
-    return seen;
-  }, [rows]);
-
-  const activeLineCode = data?.line.code ?? lineCode;
-  const rotationEnabled = isRotatingLine(activeLineCode) && groups.length > 1;
-  const activeGroupIndex = useRotatingIndex(
-    groups.length,
-    getLineRotationIntervalMs(activeLineCode),
-    rotationEnabled,
+  const visibleRows = useMemo(
+    () =>
+      [...rows].sort(
+        (a: ProductionRecordRow, b: ProductionRecordRow) =>
+          rowPriority(a) - rowPriority(b),
+      ),
+    [rows],
   );
-  const activeGroup = groups[activeGroupIndex] ?? null;
-  const visibleRows = useMemo(() => {
-    const base = rotationEnabled
-      ? rows.filter((row) => row.groupName === activeGroup)
-      : rows;
-    return [...base].sort(
-      (a: ProductionRecordRow, b: ProductionRecordRow) =>
-        rowPriority(a) - rowPriority(b),
-    );
-  }, [rows, rotationEnabled, activeGroup]);
 
   const resetKey = useMemo(
     () =>
-      `${lineCode}|${activeGroup ?? 'all'}|${lang}|${visibleRows
+      `${lineCode}|${lang}|${visibleRows
         .map((row: ProductionRecordRow) => row.id)
         .join(',')}`,
-    [lineCode, activeGroup, lang, visibleRows],
+    [lineCode, lang, visibleRows],
   );
   const { pages, pageCount, measuring } = useRowPagination(
     tableRef,
@@ -89,7 +69,7 @@ const LineDetailPage = () => {
 
   useEffect(() => {
     setPage(1);
-  }, [activeGroup, lineCode, lang]);
+  }, [lineCode, lang]);
 
   useEffect(() => {
     if (pageCount <= 1) return undefined;
@@ -107,61 +87,46 @@ const LineDetailPage = () => {
   const showWoCode = isInjmolding;
   const showItemCode = !isInjmolding;
   const showPoCode = !isInjmolding;
-  const columnCount =
-    13 +
-    (showGoodsName ? 1 : 0) +
-    (showWoCode ? 1 : 0) -
-    (showItemCode ? 0 : 1) -
-    (showPoCode ? 0 : 1);
-
+  useLayoutEffect(() => {
+    const title = titleRef.current;
+    const text = titleTextRef.current;
+    if (!title || !text) return;
+    const fitTitle = () => {
+      const baseSize = Math.min(32, Math.max(14, window.innerWidth * 0.015));
+      text.style.fontSize = `${baseSize}px`;
+      const naturalWidth = text.getBoundingClientRect().width;
+      if (naturalWidth > title.clientWidth) {
+        text.style.fontSize = `${baseSize * title.clientWidth / naturalWidth}px`;
+      }
+    };
+    fitTitle();
+    const observer = new ResizeObserver(fitTitle);
+    observer.observe(title);
+    let active = true;
+    void document.fonts.ready.then(() => { if (active) fitTitle(); });
+    return () => {
+      active = false;
+      observer.disconnect();
+      text.style.fontSize = '';
+    };
+  }, [lang, lineName, targetLabel]);
   return (
     <div className="flex h-screen flex-col overflow-hidden">
-      <main className="mx-auto flex min-h-0 w-full max-w-[1720px] flex-1 flex-col px-4 pt-5 md:px-8 md:pt-7">
-        <section className="board-banner relative overflow-hidden rounded-[14px] shadow-sm">
-          <span
-            aria-hidden
-            className="pointer-events-none absolute -left-16 top-0 h-full w-[220px] -skew-x-[26deg] bg-white/10"
-          />
-          <span
-            aria-hidden
-            className="pointer-events-none absolute left-[12%] top-0 h-full w-[54px] -skew-x-[26deg] bg-white/15"
-          />
-          <span
-            aria-hidden
-            className="pointer-events-none absolute right-[6%] top-0 h-full w-[120px] -skew-x-[26deg] bg-white/10"
-          />
-          <div className="relative flex flex-col items-center gap-3 px-4 py-3 lg:grid lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:items-center lg:gap-5">
-            <div className="order-2 flex items-center gap-5 lg:order-1">
-              <TimeChip
-                tone="banner"
-                label={t('syncTime')}
-                value={data ? formatSyncStamp(data.syncedAt) : '--:--:--'}
-                icon={<Clock className="size-[18px]" />}
-              />
-              <span aria-hidden className="hidden h-9 w-px bg-white/40 lg:block" />
-            </div>
-            <h1 className="order-1 flex min-h-[40px] flex-wrap items-center justify-center gap-x-2.5 gap-y-1 text-center lg:order-2">
-              <span className="font-display text-[19px] font-extrabold tracking-[0.02em] text-board-banner-accent/90 md:text-[26px]">
-                {lineName}
-              </span>
+      <main className="line-detail-layout mx-auto flex min-h-0 w-full flex-1 flex-col">
+        <header className="shrink-0 py-1">
+          <h1 ref={titleRef} className="board-banner w-full min-w-0 rounded-xl px-3 py-3 text-center shadow-sm">
+            <span ref={titleTextRef} className="inline-flex w-max items-center gap-x-[0.4em] whitespace-nowrap text-[clamp(14px,1.5vw,32px)]">
+              <span className="font-display font-extrabold text-board-banner-accent">{lineName}</span>
               {targetLabel ? (
-                <span className="font-display text-[19px] font-extrabold tracking-tight text-white md:text-[26px]">
+                <span className="font-display font-extrabold text-white">
                   {t('targetCompletion', { target: targetLabelText(targetLabel) })}
                 </span>
               ) : null}
-            </h1>
-            <div className="order-3 flex items-center gap-5">
-              <span aria-hidden className="hidden h-9 w-px bg-white/40 lg:block" />
-              <TimeChip
-                tone="banner"
-                value={formatBoardStampWithWeekday(now, lang)}
-                icon={<CalendarDays className="size-[18px]" />}
-              />
-            </div>
-          </div>
-        </section>
+            </span>
+          </h1>
+        </header>
 
-        <div className="mt-4 min-h-0 flex-1 overflow-y-auto scrollbar-hide" ref={tableRef}>
+        <div className="production-table-viewport mt-2 min-h-0 flex-1 overflow-y-auto scrollbar-hide" ref={tableRef}>
           {isLoading ? (
             <div className="overflow-hidden rounded-xl border border-border bg-white shadow-sm">
               <Skeleton className="h-[46px] rounded-none bg-board-head-from/80" />
@@ -188,11 +153,7 @@ const LineDetailPage = () => {
           ) : null}
 
           {!isLoading && !isError && hasRows && data ? (
-            <div className="rise" key={activeGroup ?? 'all'}>
-              <p className="mb-2 flex items-center gap-1.5 text-[12px] font-medium text-muted-foreground md:hidden">
-                <MoveHorizontal className="size-3.5" aria-hidden />
-                {t('swipeHint', { count: columnCount })}
-              </p>
+            <div className="rise">
               <ProductionTable
                 rows={tableRows}
                 showGoodsName={showGoodsName}
@@ -217,11 +178,24 @@ const LineDetailPage = () => {
         </div>
       </main>
 
-      {hasRows && pageCount > 1 ? (
-        <BoardBottomBar page={currentPage} pageCount={pageCount} onPageChange={setPage} />
-      ) : (
-        <BoardBottomBar />
-      )}
+      <BoardBottomBar
+        page={visibleRows.length > 12 ? currentPage : undefined}
+        pageCount={visibleRows.length > 12 ? safePageCount : undefined}
+        onPageChange={setPage}
+        clocks={<>
+          <TimeChip
+            label={t('syncTime')}
+            value={data ? formatSyncStamp(data.syncedAt) : '--:--:--'}
+            icon={<Clock className="size-4" />}
+            className="board-footer-clock"
+          />
+          <TimeChip
+            value={formatBoardStampWithWeekday(now, lang)}
+            icon={<CalendarDays className="size-4" />}
+            className="board-footer-clock"
+          />
+        </>}
+      />
     </div>
   );
 };
