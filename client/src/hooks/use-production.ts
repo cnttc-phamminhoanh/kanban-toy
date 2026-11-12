@@ -7,7 +7,7 @@ import {
 } from '@client/src/api/production';
 import type { ProductionLineDetail } from '@shared/api.interface';
 
-const REFRESH_INTERVAL_MS = 300_000;
+const REFRESH_INTERVAL_MS = 180_000;
 const KANBAN_STALE_TIME_MS = 15_000;
 
 export const lineKanbanQueryKey = (code: string) => ['line-kanban', code] as const;
