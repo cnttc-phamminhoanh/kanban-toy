@@ -9,7 +9,7 @@
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
 
-  --background: hsl(214 44% 97%);
+  --background: hsl(0 0% 100%);
   --foreground: hsl(218 45% 15%);
   --card: hsl(0 0% 100%);
   --card-foreground: hsl(218 45% 15%);
@@ -96,6 +96,40 @@
   --shadow-2xl: 0px 2px 12px 0px hsl(0 0% 0% / 0.05);
   --tracking-normal: 0em;
   --spacing: 0.25rem;
+}
+
+.dark {
+  --elevate-1: rgba(255, 255, 255, .04);
+  --elevate-2: rgba(255, 255, 255, .09);
+  --background: hsl(222 35% 10%);
+  --foreground: hsl(210 40% 96%);
+  --card: hsl(222 31% 15%);
+  --card-foreground: hsl(210 40% 96%);
+  --popover: hsl(222 31% 15%);
+  --popover-foreground: hsl(210 40% 96%);
+  --secondary: hsl(220 25% 22%);
+  --secondary-foreground: hsl(210 40% 96%);
+  --muted: hsl(220 25% 20%);
+  --muted-foreground: hsl(215 20% 72%);
+  --accent: hsl(216 45% 24%);
+  --accent-foreground: hsl(210 40% 96%);
+  --border: hsl(217 24% 30%);
+  --input: hsl(217 24% 30%);
+  --ring: hsl(214 88% 62%);
+  --sidebar: hsl(222 31% 15%);
+  --sidebar-foreground: hsl(210 40% 96%);
+  --sidebar-accent: hsl(216 45% 24%);
+  --sidebar-border: hsl(217 24% 30%);
+  --board-head-from: hsl(214 70% 35%);
+  --board-head-to: hsl(220 65% 28%);
+  --line-blue: hsl(214 88% 62%);
+  --line-green: hsl(146 62% 48%);
+  --line-orange: hsl(28 90% 58%);
+  --line-violet: hsl(262 70% 68%);
+  --status-ok: hsl(148 62% 48%);
+  --status-warn: hsl(30 92% 58%);
+  --status-danger: hsl(2 72% 62%);
+  --status-idle: hsl(215 20% 72%);
 }
 
 @theme inline {

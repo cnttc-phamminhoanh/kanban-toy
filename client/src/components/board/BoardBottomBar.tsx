@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 
 import BoardPagination from '@client/src/components/board/BoardPagination';
 import LanguageToggle from '@client/src/components/board/LanguageToggle';
+import ThemeToggle from '@client/src/components/board/ThemeToggle';
 import { useI18n } from '@client/src/i18n/I18nContext';
 
 interface BoardBottomBarProps {
@@ -32,12 +33,13 @@ const BoardBottomBar = ({ page, pageCount, onPageChange, clocks }: BoardBottomBa
           </>
         ) : null}
 
+        <ThemeToggle />
         <LanguageToggle />
 
         <Link
           to="/"
           aria-label={t('homeAria')}
-          className="flex size-9 items-center justify-center rounded-full border border-border bg-white text-primary shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+          className="flex size-9 items-center justify-center rounded-full border border-border bg-card text-primary shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
         >
           <House className="size-5" aria-hidden />
         </Link>

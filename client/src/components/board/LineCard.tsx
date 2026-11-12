@@ -22,7 +22,7 @@ const LineCard = ({ line, onOpen, isOpening }: LineCardProps) => {
       disabled={isOpening}
       aria-busy={isOpening}
       className={cn(
-        'group relative flex w-full items-center gap-5 overflow-hidden rounded-xl border border-border bg-white p-5 text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:cursor-wait disabled:hover:translate-y-0',
+        'group relative flex w-full items-center gap-5 overflow-hidden rounded-xl border border-border bg-card p-5 text-left shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:cursor-wait disabled:hover:translate-y-0',
         accent.border,
       )}
     >

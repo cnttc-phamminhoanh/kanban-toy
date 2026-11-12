@@ -128,7 +128,7 @@ const LineDetailPage = () => {
 
         <div className="production-table-viewport mt-2 min-h-0 flex-1 overflow-y-auto scrollbar-hide" ref={tableRef}>
           {isLoading ? (
-            <div className="overflow-hidden rounded-xl border border-border bg-white shadow-sm">
+            <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
               <Skeleton className="h-[46px] rounded-none bg-board-head-from/80" />
               {[0, 1, 2, 3].map((key: number) => (
                 <div key={key} className="flex gap-3 border-b border-border/50 px-3 py-3 last:border-b-0">
@@ -141,7 +141,7 @@ const LineDetailPage = () => {
           ) : null}
 
           {isError ? (
-            <div className="rounded-xl border border-status-danger/30 bg-white px-6 py-14 text-center">
+            <div className="rounded-xl border border-status-danger/30 bg-card px-6 py-14 text-center">
               <p className="text-[15px] font-semibold text-foreground">{t('lineLoadError')}</p>
               <p className="mt-1.5 text-[13px] text-muted-foreground">
                 {getApiErrorMessage(error, t('requestFailedHint'))}
@@ -165,7 +165,7 @@ const LineDetailPage = () => {
           ) : null}
 
           {!isLoading && !isError && !hasRows && data ? (
-            <div className="rounded-xl border border-dashed border-border bg-white px-6 py-16 text-center">
+            <div className="rounded-xl border border-dashed border-border bg-card px-6 py-16 text-center">
               <p className="text-[15px] font-semibold text-foreground">{t('noRowsTitle')}</p>
               <p className="mt-1.5 text-[13px] text-muted-foreground">
                 {t('noRowsDesc', { date: data.targetDate })}
