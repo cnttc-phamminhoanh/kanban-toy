@@ -22,7 +22,7 @@ class InjmoldingRepository {
                         e.emp_num AS SLNKH, e.fact_emp_num AS SLNTT,
                         e.ord_qty AS SLPO, e.pro_no AS CDoan, e.plan_qty AS SLKH,
                         m.goods_no AS GoodsNo, b.goods_name AS GoodsName,
-                        ROUND(k.smv, 2) AS SMV,
+                        ROUND(isnull (k.smv,0), 2) AS SMV,
                         ROW_NUMBER() OVER (
                             PARTITION BY
                                 e.dept, e.short_code, e.pro_no,e.pro_date
