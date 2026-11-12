@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { PointerEvent } from 'react';
 import { cn } from '@client/src/lib/utils';
 import { useI18n } from '@client/src/i18n/I18nContext';
@@ -168,7 +168,7 @@ const buildColumns = (
 };
 
 const tintClass = (row: ProductionRecordRow): string =>
-  row.actualQty === 0 || (row.actualQty > 0 && row.actualQty < row.plannedQty) ? 'bg-status-danger/10' : '';
+  row.actualQty > 0 && row.actualQty < row.plannedQty ? 'bg-status-danger/10' : '';
 
 const toneClass: Record<Tone, string> = {
   ok: 'text-status-ok',
@@ -251,6 +251,24 @@ const ProductionTable = ({
 }: ProductionTableProps) => {
   const { t } = useI18n();
   const columns = buildColumns(showGoodsName, showWoCode, showItemCode, showPoCode, t);
+  const groupedRows = useMemo(() => {
+    const groups = new Map<string, ProductionRecordRow[]>();
+
+    rows.forEach((row) => {
+      const groupRows = groups.get(row.groupName) ?? [];
+      groupRows.push(row);
+      groups.set(row.groupName, groupRows);
+    });
+
+    return Array.from(groups.values()).flatMap((groupRows) =>
+      [...groupRows]
+        .sort((left, right) => right.varianceQty - left.varianceQty)
+        .map((row, groupIndex) => ({
+          row,
+          groupRowSpan: groupIndex === 0 ? groupRows.length : 0,
+        })),
+    );
+  }, [rows]);
   const [columnWidths, setColumnWidths] = useState<Record<string, number> | null>(null);
   const tableRef = useRef<HTMLTableElement>(null);
   const [groupWidth, setGroupWidth] = useState(220);
@@ -365,7 +383,7 @@ const ProductionTable = ({
             </tr>
           </thead>
           <tbody>
-            {rows.map((row: ProductionRecordRow, index: number) => (
+            {groupedRows.map(({ row, groupRowSpan }, index: number) => (
               <tr
                 key={row.id}
                 className={cn(
@@ -373,21 +391,22 @@ const ProductionTable = ({
                   index % 2 === 1 ? 'bg-board-head-from/[0.12]' : 'bg-card',
                 )}
               >
-                {columns.map((column: ColumnDef) => (
+                {columns.map((column: ColumnDef) => column.key === 'groupName' && groupRowSpan === 0 ? null : (
                   <td
                     key={column.key}
+                    rowSpan={column.key === 'groupName' ? groupRowSpan : undefined}
                     className={cn(
                       'align-top whitespace-nowrap',
                       column.align === 'left' || column.bodyLeft ? 'text-left' : 'text-center',
                       column.tinted
                         ? cn('font-bold tnum', tintClass(row))
                         : 'font-medium text-foreground tnum',
-                      column.tone && row.actualQty === 0
-                        ? toneClass.danger
-                        : column.tone && row.actualQty !== 0
-                          ? toneClass[column.tone(row)]
-                          : '',
-                      column.key === 'groupName' ? 'font-bold' : '',
+                      column.tone && row.completionRate !== 0
+                        ? toneClass[column.tone(row)]
+                        : '',
+                      column.key === 'groupName'
+                        ? 'align-middle border-r border-border bg-card font-bold text-card-foreground'
+                        : '',
                     )}
                   >
                     {column.key === 'woCode' ? (
