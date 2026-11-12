@@ -14,7 +14,7 @@ const LanguageToggle = () => {
     <div
       role="group"
       aria-label={t('languageAria')}
-      className="inline-flex items-center gap-1 rounded-full border border-border bg-white p-1 shadow-sm"
+      className="inline-flex items-center gap-1 rounded-full border border-border bg-card p-1 shadow-sm"
     >
       {options.map((option) => {
         const active = option.value === lang;

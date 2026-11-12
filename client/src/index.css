@@ -97,10 +97,7 @@ body {
 
 /* Shop-floor surface: pale blue wash with a faint grid, as on the line TV board */
 .board-surface {
-  background-image:
-    radial-gradient(1200px 420px at 82% -8%, hsl(208 90% 92% / 0.75), transparent 70%),
-    radial-gradient(900px 380px at 4% 104%, hsl(210 80% 94% / 0.6), transparent 72%),
-    linear-gradient(var(--background), var(--background));
+  background-color: var(--background);
 }
 
 .board-banner {

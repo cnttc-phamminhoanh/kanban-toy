@@ -312,7 +312,7 @@ const ProductionTable = ({
   const stopResize = () => { resize.current = null; };
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-white shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
       <div className="overflow-x-auto">
         <table
           ref={tableRef}
@@ -370,7 +370,7 @@ const ProductionTable = ({
                 key={row.id}
                 className={cn(
                   'border-b border-border/50 transition-colors last:border-b-0 hover:bg-primary/[0.06]',
-                  index % 2 === 1 ? 'bg-board-head-from/[0.12]' : 'bg-white',
+                  index % 2 === 1 ? 'bg-board-head-from/[0.12]' : 'bg-card',
                 )}
               >
                 {columns.map((column: ColumnDef) => (

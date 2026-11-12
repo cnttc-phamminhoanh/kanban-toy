@@ -11,8 +11,8 @@ interface TimeChipProps {
 }
 
 const SHELL_CLASSES: Record<'light' | 'banner', string> = {
-  light: 'rounded-[10px] border border-border bg-white px-4 py-2.5 shadow-sm',
-  banner: 'rounded-full bg-white px-4 py-1.5 shadow-sm',
+  light: 'rounded-[10px] border border-border bg-card px-4 py-2.5 shadow-sm',
+  banner: 'rounded-full bg-card px-4 py-1.5 shadow-sm',
 };
 
 const TimeChip = ({
