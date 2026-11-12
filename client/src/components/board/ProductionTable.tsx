@@ -193,7 +193,54 @@ const DEFAULT_WIDTHS: Record<string, number> = {
   varianceHours: 135,
 };
 
-const isResizable = (key: string) => key === 'woCode' || key === 'goodsName';
+const isResizable = (key: string) => key === 'goodsName';
+const WO_COLUMN_WIDTH = 'clamp(160px, 13vw, 320px)';
+
+const FittedWoCode = ({ value }: { value: string }) => {
+  const containerRef = useRef<HTMLSpanElement>(null);
+  const textRef = useRef<HTMLSpanElement>(null);
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    const text = textRef.current;
+    if (!container || !text) return;
+    const fit = () => {
+      const availableWidth = container.clientWidth;
+      if (availableWidth <= 0) return;
+      let size = parseFloat(getComputedStyle(container).fontSize);
+      text.style.fontSize = `${size}px`;
+      // Measure each cell independently; short codes keep their original size.
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        const width = text.getBoundingClientRect().width;
+        if (width <= availableWidth || width === 0) break;
+        size *= availableWidth / width;
+        text.style.fontSize = `${size}px`;
+      }
+    };
+    fit();
+    let lastWidth = container.clientWidth;
+    const observer = new ResizeObserver(() => {
+      if (container.clientWidth === lastWidth) return;
+      lastWidth = container.clientWidth;
+      fit();
+    });
+    observer.observe(container);
+    window.addEventListener('resize', fit);
+    let active = true;
+    void document.fonts.ready.then(() => { if (active) fit(); });
+    return () => {
+      active = false;
+      observer.disconnect();
+      window.removeEventListener('resize', fit);
+    };
+  }, [value]);
+
+  return (
+    <span ref={containerRef} className="block whitespace-nowrap" title={value}>
+      <span ref={textRef} className="inline-block">{value}</span>
+    </span>
+  );
+};
 
 const ProductionTable = ({
   rows,
@@ -282,8 +329,10 @@ const ProductionTable = ({
                 key={column.key}
                 style={{ width: column.key === 'groupName'
                   ? groupWidth
+                  : column.key === 'woCode'
+                    ? WO_COLUMN_WIDTH
                   : columnWidths?.[column.key]
-                    ?? `calc((100% - ${groupWidth}px) * ${getWidth(column.key) / (totalWidth - getWidth('groupName'))})` }}
+                    ?? `calc((100% - ${groupWidth}px${showWoCode ? ` - ${WO_COLUMN_WIDTH}` : ''}) * ${getWidth(column.key) / (totalWidth - getWidth('groupName') - (showWoCode ? getWidth('woCode') : 0))})` }}
               />
             ))}
           </colgroup>
@@ -341,12 +390,14 @@ const ProductionTable = ({
                       column.key === 'groupName' ? 'font-bold' : '',
                     )}
                   >
-                    <span
+                    {column.key === 'woCode' ? (
+                      <FittedWoCode value={column.render(row)} />
+                    ) : <span
                       className={column.key === 'groupName' ? 'block whitespace-nowrap' : 'block truncate'}
                       title={column.render(row)}
                     >
                       {column.render(row)}
-                    </span>
+                    </span>}
                   </td>
                 ))}
               </tr>
