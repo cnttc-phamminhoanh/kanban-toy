@@ -40,32 +40,31 @@ class AssemblyRepository {
         try {
             const pool = await getIgPool();
             const result = await pool.execute(`
-                SELECT
-                    r.Flow AS Flow,
-                    '123' AS StepNo,
-                    o.style AS Style,
-                    o.OrderNo AS OrderNo,
-                    SUM(r.qty) AS ActualOutput
+                select 
+                    r.Flow AS Flow, '123' AS StepNo, o.style AS Style, o.OrderNo AS OrderNo, SUM(r.qty) AS ActualOutput
                 FROM payroll.pytckreg r
                 inner join payroll.pywrkord o on o.Wrkorder = r.WrkOrder
-                WHERE RegDate = curdate()
-                AND flow like ?
-                AND StepNo in ('123')
+                WHERE RegDate = curdate() AND flow like ? AND StepNo in ('123')
                 GROUP by flow, StepNo, o.Style, o.OrderNo 
                 union 
-                SELECT
-                    r.Flow AS Flow,
-                    '810' AS StepNo,
-                    o.style AS Style,
-                    o.OrderNo AS OrderNo,
-                    SUM(r.qty) AS ActualOutput
+                select r.Flow AS Flow, '810' AS StepNo, o.style AS Style, o.OrderNo AS OrderNo, SUM(r.qty) AS ActualOutput
                 FROM payroll.pytckreg r
                 inner join payroll.pywrkord o on o.Wrkorder = r.WrkOrder
-                WHERE RegDate = curdate()
-                AND flow like ?
-                AND StepNo in ('810')
+                WHERE RegDate = curdate() AND flow like ? AND StepNo in ('810')
+                GROUP by flow, StepNo, o.Style, o.OrderNo
+                union
+                select r.Flow AS Flow, '123' AS StepNo, o.style AS Style, o.OrderNo AS OrderNo, SUM(r.qty) AS ActualOutput
+                FROM payroll.pytckreg3 r
+                inner join payroll.pywrkord o on o.Wrkorder = r.WrkOrder
+                WHERE RegDate = curdate() AND flow like ? AND StepNo in ('123')
+                GROUP by flow, StepNo, o.Style, o.OrderNo 
+                union 
+                select r.Flow AS Flow, '810' AS StepNo, o.style AS Style, o.OrderNo AS OrderNo, SUM(r.qty) AS ActualOutput
+                FROM payroll.pytckreg3 r
+                inner join payroll.pywrkord o on o.Wrkorder = r.WrkOrder
+                WHERE RegDate = curdate() AND flow like ? AND StepNo in ('810')
                 GROUP by flow, StepNo, o.Style, o.OrderNo;
-               `, [flow, flow]);
+               `, [flow, flow, flow, flow]);
             return result
         } catch (error) {
             throw error

@@ -57,19 +57,20 @@ class InjmoldingRepository {
             const pool = await getIgPool();
             const result = await pool.execute(`
                 SELECT
-                    r.Flow AS Flow,
-                    '21' AS StepNo,
-                    o.WrkOrder AS Style,
-                    o.WrkOrder AS WrkOrder,
-                    o.OrderNo AS OrderNo,
-                    SUM(r.qty) AS ActualOutput
+                    r.Flow AS Flow, '21' AS StepNo, o.WrkOrder AS Style, o.WrkOrder AS WrkOrder,
+                    o.OrderNo AS OrderNo, SUM(r.qty) AS ActualOutput
                 FROM payroll.pytckreg r
                 inner join payroll.pywrkord o on o.Wrkorder = r.WrkOrder
-                WHERE RegDate = curdate()
-                AND flow like ?
-                AND StepNo in ('21')
+                WHERE RegDate = curdate() AND flow like ? AND StepNo in ('21')
                 GROUP by flow, StepNo, o.WrkOrder, o.OrderNo
-               `, [flow]);
+                union 
+                SELECT
+                    r.Flow AS Flow, '21' AS StepNo, o.WrkOrder AS Style, o.WrkOrder AS WrkOrder, o.OrderNo AS OrderNo, SUM(r.qty) AS ActualOutput
+                FROM payroll.pytckreg3 r
+                inner join payroll.pywrkord o on o.Wrkorder = r.WrkOrder
+                WHERE RegDate = curdate() AND flow like ? AND StepNo in ('21')
+                GROUP by flow, StepNo, o.WrkOrder, o.OrderNo;
+               `, [flow, flow]);
             return result
         } catch (error) {
             throw error
