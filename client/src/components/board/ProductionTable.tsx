@@ -260,14 +260,20 @@ const ProductionTable = ({
       groups.set(row.groupName, groupRows);
     });
 
-    return Array.from(groups.values()).flatMap((groupRows) =>
-      [...groupRows]
-        .sort((left, right) => right.varianceQty - left.varianceQty)
-        .map((row, groupIndex) => ({
-          row,
-          groupRowSpan: groupIndex === 0 ? groupRows.length : 0,
-        })),
-    );
+    return Array.from(groups.values())
+      .sort((left, right) => left[0].groupName.localeCompare(
+        right[0].groupName,
+        undefined,
+        { numeric: true, sensitivity: 'base' },
+      ))
+      .flatMap((groupRows) =>
+        [...groupRows]
+          .sort((left, right) => right.varianceQty - left.varianceQty)
+          .map((row, groupIndex) => ({
+            row,
+            groupRowSpan: groupIndex === 0 ? groupRows.length : 0,
+          })),
+      );
   }, [rows]);
   const [columnWidths, setColumnWidths] = useState<Record<string, number> | null>(null);
   const tableRef = useRef<HTMLTableElement>(null);
