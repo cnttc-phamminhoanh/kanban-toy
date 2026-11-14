@@ -168,7 +168,7 @@ const buildColumns = (
 };
 
 const tintClass = (row: ProductionRecordRow): string =>
-  row.actualQty > 0 && row.actualQty < row.plannedQty ? 'bg-status-danger/10' : '';
+  row.actualQty > 0 && row.actualQty < row.plannedQty ? 'bg-status-danger-tint' : '';
 
 const toneClass: Record<Tone, string> = {
   ok: 'text-status-ok',
@@ -345,12 +345,14 @@ const ProductionTable = ({
             {columns.map((column) => (
               <col
                 key={column.key}
-                style={{ width: column.key === 'groupName'
-                  ? groupWidth
-                  : column.key === 'woCode'
-                    ? WO_COLUMN_WIDTH
-                  : columnWidths?.[column.key]
-                    ?? `calc((100% - ${groupWidth}px${showWoCode ? ` - ${WO_COLUMN_WIDTH}` : ''}) * ${getWidth(column.key) / (totalWidth - getWidth('groupName') - (showWoCode ? getWidth('woCode') : 0))})` }}
+                style={{
+                  width: column.key === 'groupName'
+                    ? groupWidth
+                    : column.key === 'woCode'
+                      ? WO_COLUMN_WIDTH
+                      : columnWidths?.[column.key]
+                      ?? `calc((100% - ${groupWidth}px${showWoCode ? ` - ${WO_COLUMN_WIDTH}` : ''}) * ${getWidth(column.key) / (totalWidth - getWidth('groupName') - (showWoCode ? getWidth('woCode') : 0))})`
+                }}
               />
             ))}
           </colgroup>

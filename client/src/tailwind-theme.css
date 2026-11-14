@@ -59,6 +59,7 @@
   --status-ok: hsl(148 62% 34%);
   --status-warn: hsl(30 92% 44%);
   --status-danger: hsl(2 72% 50%);
+  --status-danger-tint: hsla(2, 72%, 50%, 0.1);
   --status-idle: hsl(216 17% 45%);
 
   /* Computed borders using hsl relative color syntax */
@@ -129,6 +130,7 @@
   --status-ok: hsl(148 62% 48%);
   --status-warn: hsl(30 92% 58%);
   --status-danger: hsl(2 72% 62%);
+  --status-danger-tint: hsla(4, 93%, 76%, 0.1);
   --status-idle: hsl(215 20% 72%);
 }
 
@@ -173,6 +175,7 @@
   --color-status-ok: var(--status-ok);
   --color-status-warn: var(--status-warn);
   --color-status-danger: var(--status-danger);
+  --color-status-danger-tint: var(--status-danger-tint);
   --color-status-idle: var(--status-idle);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
