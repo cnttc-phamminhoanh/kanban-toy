@@ -42,6 +42,7 @@ class InjmoldingRepository {
                     AND e.sheet_sta = 1
                     AND e.pro_no = '21'
                     AND cast(e.pro_date as date) >= CAST(GETDATE() AS DATE)
+                    AND cast(e.pro_date as date) < DATEADD(DAY, 1, CAST(GETDATE() AS DATE))
                 ) x
                 WHERE x.rn = 1
                 ORDER BY x.WrkOrder, x.GoodsNo;
